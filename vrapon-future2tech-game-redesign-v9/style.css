@@ -1,0 +1,1904 @@
+:root {
+  --green: #06a663;
+  --green-bright: #48cb7d;
+  --green-deep: #023c29;
+  --green-ink: #002d20;
+  --yellow: #ffe200;
+  --cream: #f6f6ef;
+  --ink: #161d19;
+  --muted: #69716c;
+  --white: #ffffff;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #001e15;
+}
+
+body {
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  font-family:
+    Inter, "SF Pro Display", "Segoe UI", Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+}
+
+button {
+  color: inherit;
+  font: inherit;
+}
+
+img,
+svg {
+  display: block;
+}
+
+.app {
+  position: relative;
+  /* Always fill the full viewport height. Width is allowed to fill the
+     full viewport too, up to a 9:16 cap relative to that height — so on
+     any portrait screen at or narrower than 9:16 (phones, and very tall
+     kiosk panels alike) the app fills edge-to-edge with no letterboxing.
+     Only a wider-than-9:16 (landscape/desktop) viewport keeps the classic
+     centered phone-shaped box with side bars. */
+  width: min(100vw, calc(100dvh * 9 / 16));
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--cream);
+  box-shadow: 0 0 80px rgb(0 10 7 / 45%);
+  isolation: isolate;
+}
+
+/* Full-screen toggle — floats above whichever screen is active so there's
+   one persistent control, not one per screen. Mainly useful when the game
+   is opened in an ordinary browser tab (testing, a demo, a phone visitor)
+   rather than launched with a kiosk --kiosk flag that's already full screen. */
+.fullscreen-toggle {
+  position: absolute;
+  top: calc(6px + var(--safe-top));
+  right: calc(6px + var(--safe-right, 0px));
+  z-index: 20;
+  display: grid;
+  width: clamp(26px, 6vw, 32px);
+  height: clamp(26px, 6vw, 32px);
+  place-items: center;
+  border: 1px solid rgb(0 45 32 / 16%);
+  border-radius: 50%;
+  background: rgb(255 255 255 / 78%);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 6px 16px rgb(0 45 32 / 14%);
+  color: var(--green-ink);
+  cursor: pointer;
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.fullscreen-toggle:hover {
+  background: rgb(255 255 255 / 92%);
+}
+
+.fullscreen-toggle:active {
+  transform: scale(0.92);
+}
+
+.fullscreen-toggle .fs-icon {
+  width: 56%;
+  height: 56%;
+}
+
+.fullscreen-toggle .fs-icon-collapse {
+  display: none;
+}
+
+.fullscreen-toggle.is-fullscreen .fs-icon-expand {
+  display: none;
+}
+
+.fullscreen-toggle.is-fullscreen .fs-icon-collapse {
+  display: block;
+}
+
+/* Hidden until JS confirms the Fullscreen API is actually usable, and
+   always hidden once the kiosk browser itself already owns full screen
+   (e.g. launched with --kiosk), so the control never appears redundant. */
+.fullscreen-toggle[hidden] {
+  display: none;
+}
+
+.screen {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(14px) scale(0.99);
+  transition:
+    opacity 420ms ease,
+    transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 420ms;
+}
+
+.screen.is-active {
+  z-index: 2;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.brand-bar,
+.map-header,
+.result-header {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: 7.2%;
+}
+
+/* Start screen */
+
+.screen-start {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) 37%;
+  overflow: hidden;
+  padding-top: calc(28px + var(--safe-top));
+  background:
+    linear-gradient(90deg, rgb(2 60 41 / 5%) 1px, transparent 1px) 0 0 / 38px
+      38px,
+    linear-gradient(rgb(2 60 41 / 5%) 1px, transparent 1px) 0 0 / 38px 38px,
+    var(--cream);
+}
+
+.brand-logo {
+  width: 94px;
+  height: 58px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.event-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 13px;
+  border: 1px solid rgb(0 45 32 / 17%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 68%);
+  color: var(--green-ink);
+  font-size: clamp(8px, 1.75vw, 11px);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.event-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 5px rgb(6 166 99 / 11%);
+}
+
+.start-content {
+  position: relative;
+  z-index: 4;
+  align-self: center;
+  padding: 2% 7.2% 0;
+}
+
+.eyebrow,
+.map-copy > p,
+.result-eyebrow {
+  margin: 0 0 12px;
+  color: var(--green);
+  font-size: clamp(9px, 1.9vw, 12px);
+  font-weight: 850;
+  letter-spacing: 0.18em;
+}
+
+.start-title {
+  max-width: 92%;
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(41px, 10vw, 64px);
+  font-weight: 920;
+  letter-spacing: -0.07em;
+  line-height: 0.89;
+}
+
+.start-title span {
+  display: block;
+  margin-top: 8px;
+  color: var(--green);
+}
+
+.start-subtitle {
+  max-width: 85%;
+  margin: 20px 0 22px;
+  color: #4b554f;
+  font-size: clamp(12px, 2.65vw, 16px);
+  font-weight: 500;
+  line-height: 1.55;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 0;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.btn-primary {
+  min-width: 71%;
+  min-height: clamp(56px, 12vw, 74px);
+  padding: 7px 8px 7px 24px;
+  border-radius: 999px;
+  background: var(--green-ink);
+  color: var(--white);
+  box-shadow: 0 15px 32px rgb(0 45 32 / 22%);
+  font-size: clamp(10px, 2.2vw, 14px);
+  font-weight: 850;
+  letter-spacing: 0.08em;
+}
+
+.btn-primary:hover {
+  background: #004c35;
+  box-shadow: 0 18px 34px rgb(0 45 32 / 28%);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-arrow {
+  display: grid;
+  width: clamp(42px, 9vw, 56px);
+  height: clamp(42px, 9vw, 56px);
+  place-items: center;
+  border-radius: 50%;
+  background: var(--yellow);
+  color: var(--green-ink);
+  font-size: clamp(20px, 4.7vw, 30px);
+}
+
+.hero-car-stage {
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+  border-top: 1px solid rgb(0 45 32 / 11%);
+  background: var(--white);
+}
+
+.hero-road {
+  position: absolute;
+  right: -8%;
+  bottom: -24%;
+  width: 120%;
+  height: 82%;
+  border: 1px solid rgb(0 45 32 / 12%);
+  border-radius: 50% 0 0;
+  transform: rotate(-7deg);
+}
+
+.hero-road::before {
+  position: absolute;
+  inset: 24% -4% auto 9%;
+  height: 1px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--yellow) 0 26px,
+    transparent 26px 42px
+  );
+  content: "";
+}
+
+.hero-car {
+  position: absolute;
+  left: 51%;
+  bottom: -23%;
+  width: 132%;
+  max-width: none;
+  transform: translateX(-50%);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.road-label {
+  position: absolute;
+  top: 18px;
+  left: 7.2%;
+  z-index: 3;
+  color: var(--muted);
+  font-size: clamp(8px, 1.7vw, 10px);
+  font-weight: 750;
+  letter-spacing: 0.15em;
+}
+
+.city-count {
+  position: absolute;
+  right: 6%;
+  bottom: 7%;
+  z-index: 4;
+  display: grid;
+  width: clamp(62px, 15vw, 92px);
+  height: clamp(62px, 15vw, 92px);
+  place-content: center;
+  border-radius: 50%;
+  background: var(--yellow);
+  color: var(--green-ink);
+  text-align: center;
+  transform: rotate(8deg);
+}
+
+.city-count strong {
+  font-size: clamp(24px, 6.2vw, 38px);
+  font-weight: 950;
+  letter-spacing: -0.08em;
+  line-height: 0.8;
+}
+
+.city-count span {
+  margin-top: 5px;
+  font-size: clamp(7px, 1.5vw, 9px);
+  font-weight: 900;
+  letter-spacing: 0.13em;
+}
+
+/* Map screen */
+
+.screen-map {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  padding: calc(28px + var(--safe-top)) 0 calc(22px + var(--safe-bottom));
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 92% 9%, rgb(255 226 0 / 22%), transparent 24%),
+    radial-gradient(circle at 6% 92%, rgb(6 166 99 / 13%), transparent 27%),
+    var(--cream);
+  color: var(--green-ink);
+}
+
+.screen-map::before {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgb(0 45 32 / 4%) 1px, transparent 1px) 0 0 / 46px
+      46px,
+    linear-gradient(rgb(0 45 32 / 4%) 1px, transparent 1px) 0 0 / 46px 46px;
+  content: "";
+  pointer-events: none;
+}
+
+.map-logo {
+  width: 78px;
+  height: 48px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.step-indicator {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: rgb(0 45 32 / 58%);
+  font-size: clamp(8px, 1.75vw, 11px);
+  font-weight: 800;
+  letter-spacing: 0.11em;
+}
+
+.step-number {
+  color: var(--green);
+}
+
+.step-line {
+  width: clamp(28px, 7vw, 44px);
+  height: 1px;
+  background: rgb(0 45 32 / 20%);
+}
+
+.map-copy {
+  position: relative;
+  z-index: 3;
+  padding: 3.8% 7.2% 0;
+}
+
+.map-copy > p {
+  margin-bottom: 5px;
+  color: var(--green);
+}
+
+.map-instruction {
+  margin: 0;
+  color: var(--green-ink);
+  font-size: clamp(25px, 6vw, 38px);
+  font-weight: 820;
+  letter-spacing: -0.045em;
+  line-height: 1.05;
+}
+
+.map-stage {
+  position: relative;
+  z-index: 2;
+  min-height: 0;
+  margin: 2.5% 4.5% 1.5%;
+  overflow: hidden;
+  border: 1px solid rgb(0 45 32 / 10%);
+  border-radius: clamp(22px, 5vw, 32px);
+  background:
+    linear-gradient(28deg, transparent 49.5%, rgb(6 166 99 / 5%) 50%, transparent 50.5%) 0 0 / 54px 54px,
+    linear-gradient(90deg, rgb(0 45 32 / 3%) 1px, transparent 1px) 0 0 / 32px 32px,
+    linear-gradient(rgb(0 45 32 / 3%) 1px, transparent 1px) 0 0 / 32px 32px,
+    #fbfcf8;
+  box-shadow:
+    0 18px 40px rgb(0 45 32 / 11%),
+    inset 0 1px 0 rgb(255 255 255 / 80%);
+}
+
+.map-stage::after {
+  position: absolute;
+  right: 15%;
+  bottom: 4%;
+  left: 15%;
+  height: 8%;
+  border-radius: 50%;
+  background: rgb(0 45 32 / 9%);
+  filter: blur(18px);
+  content: "";
+  pointer-events: none;
+}
+
+.map-svg {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.city-pin {
+  cursor: pointer;
+  outline: none;
+}
+
+.city-pin .pin-touch-target {
+  fill: transparent;
+  stroke: transparent;
+  pointer-events: all;
+}
+
+.city-pin.is-disabled {
+  pointer-events: none;
+}
+
+.route-path {
+  fill: none;
+  stroke: url("#route-line");
+  stroke-width: 4.2;
+  stroke-linecap: round;
+  stroke-dasharray: 2 10;
+  opacity: 0;
+  filter: drop-shadow(0 2px 4px rgb(0 45 32 / 24%));
+  transition: opacity 180ms ease;
+}
+
+.route-path.is-visible {
+  opacity: 1;
+  animation: route-flow 650ms linear infinite;
+}
+
+.taxi-marker {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.taxi-marker.is-visible {
+  opacity: 1;
+}
+
+.taxi-halo {
+  fill: rgb(255 230 0 / 32%);
+  stroke: rgb(0 45 32 / 20%);
+  stroke-width: 1;
+}
+
+.map-footer {
+  position: relative;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  margin-inline: 7.2%;
+  padding-top: 15px;
+  border-top: 1px solid rgb(0 45 32 / 12%);
+}
+
+.ride-status {
+  min-height: 0;
+  margin: 0;
+  color: rgb(0 45 32 / 64%);
+  font-size: clamp(10px, 2.1vw, 13px);
+  font-weight: 650;
+  text-align: left;
+}
+
+.footer-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 6px rgb(6 166 99 / 10%);
+  animation: footer-pulse 1.5s ease-in-out infinite;
+}
+
+.footer-index {
+  color: rgb(0 45 32 / 30%);
+  font-size: clamp(10px, 2.1vw, 13px);
+  font-weight: 800;
+}
+
+/* Result screen */
+
+.screen-result {
+  display: flex;
+  flex-direction: column;
+  padding: calc(28px + var(--safe-top)) 7.2% calc(20px + var(--safe-bottom));
+  overflow: hidden;
+  background: var(--yellow);
+}
+
+.screen-result::before {
+  position: absolute;
+  top: -10%;
+  right: -40%;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1px solid rgb(0 45 32 / 15%);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 54px rgb(0 45 32 / 4%),
+    0 0 0 108px rgb(0 45 32 / 3%);
+  content: "";
+}
+
+.result-header {
+  padding-inline: 0;
+  /* Leaves room on the right so "RIDE COMPLETE" never runs under the
+     floating full-screen button. */
+  padding-right: clamp(38px, 9vw, 46px);
+}
+
+.result-header img {
+  width: 82px;
+  height: 52px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.result-header > span {
+  color: var(--green-ink);
+  font-size: clamp(8px, 1.7vw, 10px);
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.result-copy {
+  position: relative;
+  z-index: 2;
+  margin-top: 6%;
+}
+
+.result-eyebrow {
+  margin-bottom: 6px;
+  color: var(--green-ink);
+}
+
+.result-title {
+  max-width: 95%;
+  margin: 0;
+  color: var(--green-ink);
+  font-size: clamp(34px, 8.2vw, 52px);
+  font-weight: 950;
+  letter-spacing: -0.065em;
+  line-height: 0.92;
+}
+
+.result-title span {
+  display: block;
+  color: var(--green);
+}
+
+.reward-ticket {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  margin-top: 7%;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgb(0 45 32 / 12%);
+  border-radius: clamp(20px, 4.5vw, 28px);
+  background: var(--white);
+  box-shadow: 0 20px 50px rgb(0 45 32 / 18%);
+}
+
+.ticket-top {
+  display: flex;
+  min-height: clamp(122px, 27vw, 170px);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5%;
+  background: var(--green-deep);
+  color: var(--white);
+  text-align: center;
+}
+
+.result-headline {
+  margin: 0;
+  color: var(--yellow);
+  font-size: clamp(54px, 13.5vw, 86px);
+  font-weight: 950;
+  letter-spacing: -0.09em;
+  line-height: 0.82;
+}
+
+.ticket-label {
+  margin-top: 14px;
+  color: var(--white);
+  font-size: clamp(9px, 2vw, 12px);
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.ticket-divider {
+  position: relative;
+  height: 1px;
+  margin-inline: 24px;
+  border-top: 2px dashed #d7ddd9;
+}
+
+.ticket-divider::before,
+.ticket-divider::after {
+  position: absolute;
+  top: -12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--yellow);
+  content: "";
+}
+
+.ticket-divider::before {
+  left: -37px;
+}
+
+.ticket-divider::after {
+  right: -37px;
+}
+
+.ticket-bottom {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(14px, 3.6vw, 22px);
+  padding: clamp(18px, 4.2vw, 26px);
+}
+
+.qr-panel {
+  width: clamp(86px, 20vw, 124px);
+  aspect-ratio: 1;
+  margin: 0;
+  padding: 6px;
+  border: 1px solid #dce3de;
+  border-radius: 14px;
+  background: var(--white);
+}
+
+.qr-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+}
+
+.coupon-details {
+  min-width: 0;
+}
+
+.coupon-details > span {
+  display: block;
+  color: var(--green);
+  font-size: clamp(7px, 1.6vw, 10px);
+  font-weight: 900;
+  letter-spacing: 0.13em;
+}
+
+.result-subline {
+  display: block;
+  margin: 7px 0 6px;
+  overflow-wrap: anywhere;
+  color: var(--green-ink);
+  font-size: clamp(20px, 5.2vw, 32px);
+  font-weight: 950;
+  letter-spacing: -0.04em;
+}
+
+.qr-label {
+  margin: 0;
+  color: var(--muted);
+  font-size: clamp(9px, 1.9vw, 12px);
+  font-weight: 520;
+  line-height: 1.45;
+}
+
+.btn-secondary {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  min-height: clamp(54px, 11vw, 68px);
+  margin-top: auto;
+  padding: 0 22px;
+  border: 1px solid rgb(0 45 32 / 22%);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--green-ink);
+  font-size: clamp(10px, 2.2vw, 14px);
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.btn-secondary:hover {
+  background: rgb(255 255 255 / 35%);
+}
+
+.replay-icon {
+  font-size: clamp(20px, 4vw, 26px);
+  font-weight: 500;
+}
+
+.reset-note {
+  position: relative;
+  z-index: 3;
+  margin: 10px 0 0;
+  color: rgb(0 45 32 / 58%);
+  font-size: clamp(8px, 1.7vw, 10px);
+  font-weight: 650;
+  text-align: center;
+}
+
+.confetti-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -18px;
+  width: clamp(5px, 1.4vw, 9px);
+  height: clamp(10px, 2.6vw, 16px);
+  border-radius: 2px;
+  animation-name: confetti-fall;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+}
+
+.screen-result.is-download .result-title span {
+  color: var(--green-deep);
+}
+
+.screen-result.is-download .result-headline {
+  max-width: 90%;
+  font-size: clamp(28px, 6.5vw, 42px);
+  line-height: 0.95;
+}
+
+.screen-result.is-download .ticket-label {
+  display: none;
+}
+
+@keyframes route-flow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+@keyframes footer-pulse {
+  50% {
+    opacity: 0.55;
+    transform: scale(0.78);
+  }
+}
+
+@keyframes confetti-fall {
+  to {
+    opacity: 0;
+    transform: translateY(105dvh) rotate(340deg);
+  }
+}
+
+@media (max-height: 700px) {
+  .screen-start {
+    grid-template-rows: auto minmax(0, 1fr) 34%;
+  }
+
+  .start-subtitle {
+    margin-block: 12px 14px;
+  }
+
+  .map-copy {
+    padding-top: 1%;
+  }
+
+  .result-copy {
+    margin-top: 3%;
+  }
+
+  .reward-ticket {
+    margin-top: 4%;
+  }
+}
+
+/* ==========================================================================
+   V9 — premium illustrated map overlay
+   The supplied map remains the visual layer; SVG hotspots and the live route
+   sit precisely above it so all 21 cities stay individually clickable.
+   ========================================================================== */
+
+.map-row {
+  /* A plain grid-stretched slot that always exactly matches the leftover
+     row's box. It becomes a container-query context so .map-stage can size
+     itself in "container query" units (cqw/cqh), which — unlike percentages
+     — can reference the CROSS axis too. That lets .map-stage pick whichever
+     axis is actually the tight one and fit inside it perfectly, on any
+     screen shape: a wide phone, a square tablet, or an extremely tall
+     digital-signage panel. Plain percentages can't do this (a percentage
+     width can only ever reference the row's width, never its height), which
+     is what let the map overflow sideways on very tall screens before. */
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  container-type: size;
+}
+
+.screen-map .map-stage {
+  position: relative;
+  margin: 2px auto 8px;
+  width: min(89cqw, calc(100cqh * 917 / 1536));
+  height: min(100cqh, calc(89cqw * 1536 / 917));
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 72%);
+  border-radius: 25px;
+  background: #dff4e8;
+  box-shadow:
+    0 20px 45px rgb(0 45 32 / 18%),
+    0 3px 10px rgb(0 45 32 / 11%);
+}
+
+.screen-map .map-stage::after {
+  z-index: 3;
+  border: 1px solid rgb(255 255 255 / 58%);
+  border-radius: inherit;
+  background: none;
+  box-shadow: inset 0 0 30px rgb(0 45 32 / 6%);
+  pointer-events: none;
+}
+
+.premium-map-image,
+.screen-map .map-svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.premium-map-image {
+  z-index: 0;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.screen-map .map-svg {
+  z-index: 2;
+  padding: 0;
+  overflow: visible;
+  touch-action: manipulation;
+}
+
+.screen-map .city-pin {
+  cursor: pointer;
+  outline: none;
+}
+
+.screen-map .city-pin .pin-touch-target {
+  fill: rgb(255 255 255 / 0.001);
+  stroke: transparent;
+  pointer-events: all;
+}
+
+.screen-map .pin-selected-ring {
+  fill: rgb(255 230 0 / 20%);
+  stroke: #ffe600;
+  stroke-width: 9;
+  opacity: 0;
+  pointer-events: none;
+  filter: drop-shadow(0 0 10px rgb(255 230 0 / 90%));
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.screen-map .city-pin.is-selected .pin-selected-ring,
+.screen-map .city-pin:focus-visible .pin-selected-ring {
+  opacity: 1;
+  animation: premium-pin-pulse 900ms ease-in-out infinite alternate;
+}
+
+.screen-map .city-pin.is-disabled {
+  pointer-events: none;
+}
+
+.screen-map .route-path {
+  fill: none;
+  stroke: #ffe000;
+  stroke-width: 11;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 22 17;
+  filter:
+    drop-shadow(0 0 2px #004a31)
+    drop-shadow(0 5px 8px rgb(0 45 32 / 35%));
+}
+
+.screen-map .taxi-halo {
+  fill: #ffffff;
+  stroke: #06a663;
+  stroke-width: 6;
+  filter: drop-shadow(0 8px 11px rgb(0 45 32 / 35%));
+}
+
+@keyframes premium-pin-pulse {
+  from { transform: scale(0.9); }
+  to { transform: scale(1.08); }
+}
+
+@media (max-height: 700px) {
+  .screen-map .map-header {
+    min-height: 45px;
+  }
+
+  .screen-map .map-copy {
+    padding-block: 3px 4px;
+  }
+
+  .screen-map .map-stage {
+    margin-bottom: 4px;
+    border-radius: 19px;
+  }
+
+  .screen-map .map-footer {
+    min-height: 37px;
+    padding-top: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen,
+.btn{
+    transition: none;
+  }
+
+  .city-pin .pin-touch-target,
+  .route-path,
+  .footer-pulse,
+  .confetti-piece {
+    animation: none;
+  }
+}
+
+/* Revision 2 — readable city map and a complete one-screen reward */
+
+.screen-start .brand-bar {
+  min-height: 64px;
+}
+
+.screen-start .start-content {
+  align-self: start;
+  padding-top: clamp(24px, 4vh, 38px);
+}
+
+.screen-start .start-title {
+  font-size: clamp(38px, 8.8vw, 56px);
+}
+
+.screen-map {
+  padding-top: calc(22px + var(--safe-top));
+  padding-bottom: calc(18px + var(--safe-bottom));
+  background:
+    linear-gradient(90deg, rgb(0 80 53 / 5%) 1px, transparent 1px) 0 0 / 42px
+      42px,
+    linear-gradient(rgb(0 80 53 / 5%) 1px, transparent 1px) 0 0 / 42px 42px,
+    var(--cream);
+  color: var(--green-ink);
+}
+
+.screen-map::before {
+  display: none;
+}
+
+.map-logo {
+  width: 82px;
+  height: 50px;
+}
+
+.step-indicator {
+  color: #607168;
+}
+
+.step-number {
+  color: var(--green);
+}
+
+.step-line {
+  background: rgb(0 74 49 / 22%);
+}
+
+.map-copy {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  column-gap: 14px;
+  padding-top: 1.5%;
+}
+
+.map-copy > p {
+  grid-column: 1 / -1;
+  margin-bottom: 2px;
+  color: var(--green);
+}
+
+.map-instruction {
+  color: var(--green-ink);
+  font-size: clamp(23px, 5.2vw, 33px);
+  line-height: 1;
+}
+
+.map-stage {
+  margin: 0 0 -1%;
+}
+
+.map-stage::after {
+  display: none;
+}
+
+.city-option.is-disabled {
+  pointer-events: none;
+}
+
+.city-pin .pin-touch-target {
+  fill: transparent;
+  stroke: none;
+  animation: none;
+}
+
+.route-path {
+  stroke: var(--yellow);
+  stroke-width: 5;
+  filter:
+    drop-shadow(0 0 1px var(--green-ink))
+    drop-shadow(0 2px 4px rgb(0 45 32 / 22%));
+}
+
+.taxi-halo {
+  fill: rgb(255 226 0 / 33%);
+  stroke: var(--green);
+}
+
+.map-footer {
+  padding-top: 12px;
+  border-top-color: rgb(0 74 49 / 17%);
+}
+
+.ride-status {
+  color: #596a61;
+}
+
+.footer-pulse {
+  background: var(--green);
+  box-shadow: 0 0 0 6px rgb(6 166 99 / 10%);
+}
+
+.footer-index {
+  color: rgb(0 74 49 / 35%);
+}
+
+.screen-result {
+  padding-top: calc(18px + var(--safe-top));
+  padding-bottom: calc(12px + var(--safe-bottom));
+}
+
+.result-header img {
+  width: 72px;
+  height: 44px;
+}
+
+.result-copy {
+  margin-top: 1.5%;
+}
+
+.result-eyebrow {
+  margin-bottom: 3px;
+  font-size: clamp(8px, 1.65vw, 10px);
+}
+
+.result-title {
+  font-size: clamp(28px, 6.2vw, 39px);
+  line-height: 0.94;
+}
+
+.reward-ticket {
+  margin-top: 3%;
+  border-radius: clamp(17px, 3.8vw, 23px);
+}
+
+.ticket-top {
+  min-height: clamp(104px, 20vw, 126px);
+  padding: 3.5%;
+}
+
+.result-headline {
+  font-size: clamp(50px, 11vw, 70px);
+  line-height: 0.8;
+}
+
+.ticket-label {
+  margin-top: 9px;
+  font-size: clamp(8px, 1.7vw, 10px);
+}
+
+.ticket-bottom {
+  gap: clamp(11px, 2.5vw, 16px);
+  padding: clamp(12px, 2.7vw, 17px);
+}
+
+.qr-block {
+  display: flex;
+  width: clamp(90px, 19vw, 112px);
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.qr-panel {
+  width: 100%;
+  padding: 4px;
+  border-radius: 10px;
+}
+
+.qr-block > span {
+  color: var(--green-ink);
+  font-size: clamp(6px, 1.2vw, 7.5px);
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.coupon-details > span {
+  font-size: clamp(7px, 1.45vw, 9px);
+}
+
+.result-subline {
+  margin: 5px 0 5px;
+  padding: 8px 10px;
+  border: 1px solid #d4e3db;
+  border-radius: 9px;
+  background: #f1f8f4;
+  font-size: clamp(18px, 4.2vw, 26px);
+  letter-spacing: -0.025em;
+}
+
+.qr-label {
+  font-size: clamp(8px, 1.65vw, 10px);
+}
+
+.btn-secondary {
+  min-height: clamp(48px, 9.5vw, 58px);
+  margin-top: 12px;
+}
+
+.reset-note {
+  margin-top: 7px;
+}
+
+.screen-result.is-download .result-headline {
+  font-size: clamp(25px, 5.4vw, 34px);
+}
+
+/* Revision 5 — clean, non-overlapping opening screen */
+
+.screen-start {
+  grid-template-rows: minmax(78px, 10%) minmax(0, 58%) minmax(0, 32%);
+  padding-top: var(--safe-top);
+}
+
+.screen-start .brand-bar {
+  min-height: 0;
+  padding-top: 12px;
+}
+
+.screen-start .brand-logo {
+  width: clamp(76px, 16vw, 92px);
+  height: clamp(48px, 10vw, 58px);
+}
+
+.screen-start .event-tag {
+  min-height: clamp(34px, 7.4vw, 42px);
+  padding-inline: clamp(12px, 2.8vw, 17px);
+  background: rgb(255 255 255 / 88%);
+  font-size: clamp(9px, 1.8vw, 11px);
+}
+
+.screen-start .start-content {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  align-self: stretch;
+  padding: 10px 7.2% 18px;
+}
+
+.screen-start .eyebrow {
+  margin-bottom: clamp(13px, 2.4vh, 20px);
+  font-size: clamp(9px, 1.8vw, 12px);
+}
+
+.screen-start .start-title {
+  width: 100%;
+  max-width: 100%;
+  font-size: clamp(40px, 8.1vw, 50px);
+  letter-spacing: -0.065em;
+  line-height: 0.92;
+}
+
+.screen-start .start-title span {
+  margin-top: 9px;
+}
+
+.screen-start .start-subtitle {
+  max-width: 94%;
+  margin: clamp(17px, 2.5vh, 23px) 0 clamp(19px, 2.8vh, 26px);
+  font-size: clamp(13px, 2.4vw, 16px);
+  line-height: 1.38;
+}
+
+.screen-start .btn-primary {
+  width: min(78%, 340px);
+  min-width: 0;
+  min-height: clamp(58px, 10.5vw, 68px);
+  padding-left: clamp(20px, 4.4vw, 28px);
+  font-size: clamp(10px, 2vw, 13px);
+  box-shadow: 0 12px 26px rgb(0 45 32 / 20%);
+}
+
+.screen-start .btn-arrow {
+  width: clamp(46px, 8.8vw, 56px);
+  height: clamp(46px, 8.8vw, 56px);
+}
+
+.screen-start .hero-car-stage {
+  isolation: isolate;
+  border-top: 1px solid rgb(0 45 32 / 8%);
+  background:
+    linear-gradient(180deg, #ffffff 0 64%, #f4f7f5 64% 100%);
+}
+
+.screen-start .hero-car {
+  left: 50%;
+  bottom: -42%;
+  z-index: 2;
+  width: 106%;
+  transform: translateX(-50%);
+  mix-blend-mode: multiply;
+}
+
+.screen-start .hero-road {
+  right: -4%;
+  bottom: -34%;
+  width: 112%;
+  height: 76%;
+  background: rgb(255 255 255 / 72%);
+  transform: rotate(-5deg);
+}
+
+.screen-start .road-label {
+  display: none;
+}
+
+.screen-start .city-count {
+  right: 6.5%;
+  bottom: 7%;
+  width: clamp(68px, 14vw, 84px);
+  height: clamp(68px, 14vw, 84px);
+  box-shadow: 0 10px 24px rgb(0 45 32 / 14%);
+}
+
+@media (max-height: 700px) {
+  .screen-start {
+    grid-template-rows: minmax(64px, 10%) minmax(0, 62%) minmax(0, 28%);
+  }
+
+  .screen-start .start-content {
+    padding-block: 6px 10px;
+  }
+
+  .screen-start .start-title {
+    font-size: clamp(34px, 7.5vw, 43px);
+  }
+
+  .screen-start .start-subtitle {
+    margin-block: 12px 14px;
+  }
+}
+
+/* Revision 6 — complete visual system refresh */
+
+:root {
+  --soft-mint: #e8f5ee;
+  --line: #d2e3da;
+  --shadow-soft: 0 18px 44px rgb(0 45 32 / 13%);
+}
+
+.app {
+  background: #f7f8f3;
+  box-shadow: 0 0 70px rgb(0 24 17 / 35%);
+}
+
+/* Opening screen */
+
+.screen-start {
+  grid-template-rows: minmax(76px, 10%) minmax(0, 55%) minmax(0, 35%);
+  background:
+    radial-gradient(circle at 100% 0, rgb(255 226 0 / 12%), transparent 31%),
+    linear-gradient(90deg, rgb(0 74 49 / 4%) 1px, transparent 1px) 0 0 / 46px 46px,
+    linear-gradient(rgb(0 74 49 / 4%) 1px, transparent 1px) 0 0 / 46px 46px,
+    #f8f8f3;
+}
+
+.screen-start .brand-bar {
+  padding-top: 10px;
+}
+
+.screen-start .brand-logo {
+  width: clamp(74px, 15vw, 88px);
+  height: clamp(46px, 9vw, 54px);
+}
+
+.screen-start .event-tag {
+  min-height: 38px;
+  border-color: var(--line);
+  background: rgb(255 255 255 / 92%);
+  box-shadow: 0 7px 20px rgb(0 45 32 / 6%);
+}
+
+.screen-start .start-content {
+  justify-content: center;
+  padding: 8px 7.2% 16px;
+}
+
+.screen-start .eyebrow {
+  margin-bottom: 14px;
+  color: var(--green);
+  font-size: clamp(9px, 1.75vw, 11px);
+}
+
+.screen-start .start-title {
+  width: 100%;
+  max-width: none;
+  font-size: clamp(40px, 7.7vw, 48px);
+  letter-spacing: -0.06em;
+  line-height: 0.94;
+}
+
+.screen-start .start-title span {
+  margin-top: 8px;
+}
+
+.screen-start .start-subtitle {
+  max-width: 88%;
+  margin: 18px 0 21px;
+  color: #4d5e55;
+  font-size: clamp(13px, 2.35vw, 15px);
+  line-height: 1.42;
+}
+
+.screen-start .btn-primary {
+  width: min(76%, 320px);
+  min-height: 62px;
+  padding: 6px 7px 6px 24px;
+  border: 1px solid rgb(255 255 255 / 8%);
+  box-shadow: 0 14px 28px rgb(0 45 32 / 20%);
+  white-space: nowrap;
+}
+
+.screen-start .btn-primary > span:first-child {
+  white-space: nowrap;
+}
+
+.screen-start .btn-arrow {
+  width: 50px;
+  height: 50px;
+  font-size: 25px;
+}
+
+.screen-start .hero-car-stage {
+  border-top: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, #ffffff 0 72%, #eef4f0 72% 100%);
+}
+
+.screen-start .hero-car-stage::before {
+  position: absolute;
+  top: 17%;
+  left: 6%;
+  z-index: 1;
+  width: 38px;
+  height: 38px;
+  border: 2px solid var(--green);
+  border-radius: 50%;
+  box-shadow: 0 0 0 8px rgb(6 166 99 / 8%);
+  content: "";
+}
+
+.screen-start .hero-car {
+  bottom: -40%;
+  width: 104%;
+}
+
+.screen-start .hero-road {
+  right: -4%;
+  bottom: -29%;
+  width: 110%;
+  height: 72%;
+  border-color: rgb(0 74 49 / 12%);
+  background: #ffffff;
+  transform: rotate(-4deg);
+}
+
+.screen-start .city-count {
+  right: 6%;
+  bottom: 7%;
+  width: clamp(64px, 13vw, 78px);
+  height: clamp(64px, 13vw, 78px);
+  border: 2px solid rgb(255 255 255 / 82%);
+  box-shadow: 0 10px 26px rgb(0 45 32 / 14%);
+  transform: rotate(5deg);
+}
+
+.screen-start .city-count strong {
+  font-size: clamp(25px, 5.4vw, 33px);
+}
+
+/* City screen */
+
+.screen-map {
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  padding-top: calc(16px + var(--safe-top));
+  padding-bottom: calc(13px + var(--safe-bottom));
+  background:
+    radial-gradient(circle at 50% 52%, rgb(6 166 99 / 8%), transparent 42%),
+    #f7f8f3;
+}
+
+.screen-map .map-header {
+  min-height: 54px;
+}
+
+.screen-map .map-logo {
+  width: 70px;
+  height: 44px;
+}
+
+.screen-map .step-indicator {
+  font-size: clamp(8px, 1.65vw, 10px);
+}
+
+.screen-map .map-copy {
+  display: block;
+  padding: 8px 7.2% 7px;
+}
+
+.screen-map .map-copy > p {
+  margin-bottom: 5px;
+}
+
+.screen-map .map-instruction {
+  max-width: 100%;
+  color: var(--green-ink);
+  font-size: clamp(25px, 5.4vw, 32px);
+  letter-spacing: -0.04em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.screen-map .map-stage {
+  min-height: 0;
+  margin: 4px 5.4% 8px;
+  overflow: hidden;
+  border: 1px solid #d5e6dd;
+  border-radius: 26px;
+  background:
+    linear-gradient(90deg, rgb(0 74 49 / 3.5%) 1px, transparent 1px) 0 0 / 34px 34px,
+    linear-gradient(rgb(0 74 49 / 3.5%) 1px, transparent 1px) 0 0 / 34px 34px,
+    #fbfcf8;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 80%),
+    0 14px 34px rgb(0 45 32 / 9%);
+}
+
+.screen-map .map-svg {
+  width: 100%;
+  height: 100%;
+  padding: 5px;
+}
+
+.screen-map .city-pin .pin-touch-target {
+  fill: rgb(255 255 255 / 1%);
+}
+
+.screen-map .route-path {
+  stroke: var(--yellow);
+  stroke-width: 4.5;
+  stroke-dasharray: 8 7;
+  filter:
+    drop-shadow(0 0 1px var(--green-ink))
+    drop-shadow(0 3px 5px rgb(0 45 32 / 20%));
+}
+
+.screen-map .taxi-halo {
+  fill: #ffffff;
+  stroke: var(--green);
+  stroke-width: 2;
+  filter: drop-shadow(0 5px 7px rgb(0 45 32 / 23%));
+}
+
+.screen-map .map-footer {
+  min-height: 46px;
+  margin-inline: 7.2%;
+  padding-top: 9px;
+  border-top-color: var(--line);
+}
+
+.screen-map .ride-status {
+  overflow: hidden;
+  color: #52645a;
+  font-size: clamp(9px, 1.9vw, 11px);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Reward screen */
+
+.screen-result {
+  padding: calc(17px + var(--safe-top)) 7.2% calc(12px + var(--safe-bottom));
+  background:
+    linear-gradient(180deg, var(--yellow) 0 39%, #f7f8f3 39% 100%);
+}
+
+.screen-result::before {
+  top: -19%;
+  right: -54%;
+  border-color: rgb(0 45 32 / 11%);
+  box-shadow:
+    0 0 0 44px rgb(255 255 255 / 9%),
+    0 0 0 88px rgb(0 45 32 / 3%);
+}
+
+.screen-result .result-header img {
+  width: 70px;
+  height: 43px;
+}
+
+.screen-result .result-copy {
+  margin-top: 11px;
+}
+
+.screen-result .result-eyebrow {
+  margin-bottom: 4px;
+  font-size: clamp(8px, 1.6vw, 10px);
+}
+
+.screen-result .result-title {
+  max-width: 100%;
+  font-size: clamp(29px, 6.2vw, 37px);
+  line-height: 0.94;
+}
+
+.result-actions {
+  /* Groups the ticket, button and hint together so auto margins center
+     the whole unit in whatever vertical space is left, instead of the
+     ticket sitting near the top with a large empty gap above the button. */
+  display: flex;
+  flex-direction: column;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.screen-result .reward-ticket {
+  margin-top: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 26px;
+  box-shadow: var(--shadow-soft);
+}
+
+.screen-result .ticket-top {
+  min-height: 122px;
+  border-radius: 26px 26px 0 0;
+  background:
+    radial-gradient(circle at 82% 18%, rgb(6 166 99 / 32%), transparent 34%),
+    var(--green-deep);
+}
+
+.screen-result .result-headline {
+  font-size: clamp(58px, 12.5vw, 76px);
+  line-height: 0.82;
+}
+
+.screen-result .ticket-label {
+  margin-top: 12px;
+}
+
+.screen-result .ticket-divider {
+  z-index: 2;
+  margin-inline: 22px;
+}
+
+.screen-result .ticket-bottom {
+  grid-template-columns: 112px minmax(0, 1fr);
+  min-height: 170px;
+  gap: 18px;
+  padding: 17px 18px 18px;
+  overflow: hidden;
+  border-radius: 0 0 26px 26px;
+  background: #ffffff;
+}
+
+.screen-result .qr-block {
+  width: 112px;
+  gap: 6px;
+}
+
+.screen-result .qr-panel {
+  width: 108px;
+  padding: 5px;
+  border: 1px solid #cde1d7;
+  border-radius: 13px;
+}
+
+.screen-result .qr-block > span {
+  max-width: 108px;
+  font-size: 6.7px;
+  line-height: 1.2;
+}
+
+.screen-result .coupon-details {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.screen-result .coupon-details > span {
+  font-size: clamp(7px, 1.4vw, 9px);
+}
+
+.screen-result .result-subline {
+  display: block;
+  width: 100%;
+  margin: 7px 0 8px;
+  padding: 10px 8px;
+  overflow: hidden;
+  border-color: #cfe2d8;
+  border-radius: 11px;
+  background: var(--soft-mint);
+  font-size: clamp(16px, 3.7vw, 22px);
+  letter-spacing: -0.035em;
+  line-height: 1;
+  text-align: center;
+  text-overflow: clip;
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+
+.screen-result .qr-label {
+  font-size: clamp(8px, 1.55vw, 9px);
+  line-height: 1.35;
+}
+
+.screen-result .btn-secondary {
+  min-height: 54px;
+  margin-top: 22px;
+  border-color: rgb(0 45 32 / 19%);
+  background: rgb(255 255 255 / 58%);
+}
+
+.screen-result .reset-note {
+  margin-top: 7px;
+  margin-bottom: 6px;
+}
+
+.screen-result.is-download .result-headline {
+  max-width: 86%;
+  font-size: clamp(24px, 5vw, 31px);
+  line-height: 0.95;
+}
+
+.screen-result.is-download .result-title {
+  font-size: clamp(25px, 5.4vw, 33px);
+}
+
+@media (max-height: 700px) {
+  .screen-start {
+    grid-template-rows: minmax(64px, 9%) minmax(0, 59%) minmax(0, 32%);
+  }
+
+  .screen-start .start-title {
+    font-size: clamp(34px, 7vw, 41px);
+  }
+
+  .screen-start .start-subtitle {
+    margin-block: 13px 15px;
+  }
+
+  .screen-map .map-stage {
+    margin-top: 1px;
+  }
+
+  .screen-result .ticket-top {
+    min-height: 102px;
+  }
+
+  .screen-result .ticket-bottom {
+    min-height: 144px;
+    grid-template-columns: 96px minmax(0, 1fr);
+    padding: 13px 15px;
+  }
+
+  .screen-result .qr-block,
+  .screen-result .qr-panel {
+    width: 94px;
+  }
+}
+
+/* V9 final map rules — kept last so the illustrated map owns the stage. */
+.screen-map .map-stage {
+  position: relative;
+  margin: 2px auto 8px;
+  width: min(89cqw, calc(100cqh * 917 / 1536));
+  height: min(100cqh, calc(89cqw * 1536 / 917));
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 72%);
+  border-radius: 25px;
+  background: #dff4e8;
+  box-shadow: 0 20px 45px rgb(0 45 32 / 18%), 0 3px 10px rgb(0 45 32 / 11%);
+}
+
+.screen-map .map-stage::after {
+  z-index: 3;
+  border: 1px solid rgb(255 255 255 / 58%);
+  border-radius: inherit;
+  background: none;
+  box-shadow: inset 0 0 30px rgb(0 45 32 / 6%);
+  pointer-events: none;
+}
+
+.premium-map-image,
+.screen-map .map-svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.premium-map-image {
+  z-index: 0;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.screen-map .map-svg {
+  z-index: 2;
+  padding: 0;
+  overflow: visible;
+  touch-action: manipulation;
+}
+
+.screen-map .city-pin {
+  cursor: pointer;
+  outline: none;
+}
+
+.screen-map .city-pin .pin-touch-target {
+  fill: rgb(255 255 255 / 0.001);
+  stroke: transparent;
+  pointer-events: all;
+}
+
+.screen-map .pin-selected-ring {
+  fill: rgb(255 230 0 / 20%);
+  stroke: #ffe600;
+  stroke-width: 9;
+  opacity: 0;
+  pointer-events: none;
+  filter: drop-shadow(0 0 10px rgb(255 230 0 / 90%));
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.screen-map .city-pin.is-selected .pin-selected-ring,
+.screen-map .city-pin:focus-visible .pin-selected-ring {
+  opacity: 1;
+  animation: premium-pin-pulse 900ms ease-in-out infinite alternate;
+}
+
+.screen-map .city-pin.is-disabled {
+  pointer-events: none;
+}
+
+.screen-map .route-path {
+  fill: none;
+  stroke: #ffe000;
+  stroke-width: 11;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 22 17;
+  filter: drop-shadow(0 0 2px #004a31) drop-shadow(0 5px 8px rgb(0 45 32 / 35%));
+}
+
+.screen-map .taxi-halo {
+  fill: #ffffff;
+  stroke: #06a663;
+  stroke-width: 6;
+  filter: drop-shadow(0 8px 11px rgb(0 45 32 / 35%));
+}
+
+@media (max-height: 700px) {
+  .screen-map .map-header { min-height: 45px; }
+  .screen-map .map-copy { padding-block: 3px 4px; }
+  .screen-map .map-stage { margin: 1px auto 4px; border-radius: 19px; }
+  .screen-map .map-footer { min-height: 37px; padding-top: 6px; }
+}

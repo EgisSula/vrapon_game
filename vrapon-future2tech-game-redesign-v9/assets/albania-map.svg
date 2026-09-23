@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Albania national boundary outline.
+  Coordinates were plotted from real public-domain latitude/longitude
+  boundary data (equirectangular projection, longitude corrected by
+  cos(mean latitude) so the shape is not distorted) and are stored here
+  as a static, offline SVG path — no external map tiles or APIs required.
+  viewBox: 0 0 400 640
+-->
+<svg viewBox="0 0 400 640" xmlns="http://www.w3.org/2000/svg" id="albania-outline">
+  <path
+    id="albania-boundary"
+    d="M 261.2,187.28 L 243.03,251.91 L 263.34,333.37 L 322.67,379.62 L 319.8,429.52 L 273.32,457.06 L 264.74,518.79 L 198.25,610.91 L 173.94,597.61 L 171.08,555.83 L 91.86,492.05 L 79.42,401.56 L 91.5,271.96 L 111.02,213.0 L 86.96,183.07 L 77.33,122.63 L 139.34,29.09 L 148.43,64.83 L 186.91,48.01 L 217.37,98.98 L 251.58,118.43 L 261.2,187.28 Z"
+  />
+</svg>
